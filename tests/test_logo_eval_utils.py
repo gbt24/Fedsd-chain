@@ -5,6 +5,7 @@ from logo_eval_utils import (
     build_logo_eval_report,
     build_normal_class_ids,
     compute_logo_metrics,
+    infer_block_out_channels,
 )
 
 
@@ -47,6 +48,18 @@ class LogoEvalUtilsTest(unittest.TestCase):
         labels = build_normal_class_ids(num_classes=4, trigger_class=3, num_samples=7)
 
         self.assertEqual(labels, [0, 1, 2, 0, 1, 2, 0])
+
+    def test_infer_block_out_channels_from_checkpoint_shapes(self):
+        fake_state_dict = {
+            "down_blocks.0.res_blocks.0.conv1.weight": [[[[0]]]] * 128,
+            "down_blocks.1.res_blocks.0.conv1.weight": [[[[0]]]] * 256,
+            "down_blocks.2.res_blocks.0.conv1.weight": [[[[0]]]] * 256,
+            "down_blocks.3.res_blocks.0.conv1.weight": [[[[0]]]] * 256,
+        }
+
+        channels = infer_block_out_channels(fake_state_dict, (128, 256, 512, 512))
+
+        self.assertEqual(channels, (128, 256, 256, 256))
 
 
 if __name__ == "__main__":

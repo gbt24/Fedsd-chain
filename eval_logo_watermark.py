@@ -7,7 +7,11 @@ import torch
 from PIL import Image
 from torchvision.utils import save_image
 
-from logo_eval_utils import build_logo_eval_report, build_normal_class_ids
+from logo_eval_utils import (
+    build_logo_eval_report,
+    build_normal_class_ids,
+    infer_block_out_channels,
+)
 from train_logo_detector import LogoDetector
 from utils.simple_diffusion import SimpleDiffusion
 from utils.simple_unet import ClassConditionalUNet
@@ -29,6 +33,11 @@ def load_run_args(model_dir):
 
 def load_simple_unet(model_dir, checkpoint_path, device):
     args = load_run_args(model_dir)
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    state_dict = checkpoint["model"] if "model" in checkpoint else checkpoint
+    block_out_channels = infer_block_out_channels(
+        state_dict, tuple(args.block_out_channels)
+    )
     model = ClassConditionalUNet(
         num_classes=args.num_classes,
         in_channels=args.num_channels,
@@ -36,12 +45,11 @@ def load_simple_unet(model_dir, checkpoint_path, device):
         sample_size=args.image_size,
         time_embed_dim=args.time_embed_dim,
         class_embed_dim=args.class_embed_dim,
-        block_out_channels=tuple(args.block_out_channels),
+        block_out_channels=block_out_channels,
         layers_per_block=args.layers_per_block,
         dropout=args.dropout,
     )
-    checkpoint = torch.load(checkpoint_path, map_location=device)
-    model.load_state_dict(checkpoint["model"] if "model" in checkpoint else checkpoint)
+    model.load_state_dict(state_dict)
     model.to(device)
     model.eval()
     return model, args

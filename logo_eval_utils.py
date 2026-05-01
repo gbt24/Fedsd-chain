@@ -60,3 +60,19 @@ def build_normal_class_ids(num_classes, trigger_class, num_samples):
             labels.append(current)
         current = (current + 1) % num_classes
     return labels
+
+
+def _leading_dim(value):
+    if hasattr(value, "shape"):
+        return int(value.shape[0])
+    return len(value)
+
+
+def infer_block_out_channels(state_dict, default_channels):
+    channels = []
+    for block_index in range(4):
+        key = f"down_blocks.{block_index}.res_blocks.0.conv1.weight"
+        if key not in state_dict:
+            return tuple(default_channels)
+        channels.append(_leading_dim(state_dict[key]))
+    return tuple(channels)
