@@ -62,9 +62,34 @@ def sha256_array(arr):
     return sha256_json(payload)
 
 
+def _to_numpy_array(value):
+    if isinstance(value, np.ndarray):
+        return value
+    if hasattr(value, "detach") and callable(value.detach):
+        return value.detach().cpu().numpy()
+    if hasattr(value, "cpu") and callable(value.cpu) and hasattr(value, "numpy"):
+        return value.cpu().numpy()
+    return np.asarray(value)
+
+
+def sha256_model_state_dict_bytes(state_dict):
+    hasher = hashlib.sha256()
+    for key, value in sorted(state_dict.items()):
+        array = _to_numpy_array(value)
+        contiguous = np.ascontiguousarray(array)
+        hasher.update(str(key).encode("utf-8"))
+        hasher.update(b"\0")
+        hasher.update(str(contiguous.dtype).encode("utf-8"))
+        hasher.update(b"\0")
+        hasher.update(str(tuple(contiguous.shape)).encode("utf-8"))
+        hasher.update(b"\0")
+        hasher.update(contiguous.tobytes())
+        hasher.update(b"\0")
+    return hasher.hexdigest()
+
+
 def sha256_model_state_dict(state_dict):
-    normalized = {str(k): _normalize_value(v) for k, v in sorted(state_dict.items())}
-    return sha256_json(normalized)
+    return sha256_model_state_dict_bytes(state_dict)
 
 
 def sha256_torch_checkpoint(path):

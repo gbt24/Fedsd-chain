@@ -1,7 +1,13 @@
 # -*- coding: UTF-8 -*-
 import unittest
 
-from blockchain.hash_utils import sha256_json, sha256_model_state_dict
+import numpy as np
+
+from blockchain.hash_utils import (
+    sha256_json,
+    sha256_model_state_dict,
+    sha256_model_state_dict_bytes,
+)
 
 
 class HashUtilsTest(unittest.TestCase):
@@ -30,6 +36,35 @@ class HashUtilsTest(unittest.TestCase):
         right = {"nested": {"y": 4, "z": 3}, "a": 1, "b": 2}
 
         self.assertEqual(sha256_json(left), sha256_json(right))
+
+    def test_model_hash_changes_when_dtype_changes(self):
+        left = {"weight": np.array([1, 2, 3], dtype=np.float32)}
+        right = {"weight": np.array([1, 2, 3], dtype=np.float64)}
+
+        self.assertNotEqual(
+            sha256_model_state_dict(left),
+            sha256_model_state_dict(right),
+        )
+
+    def test_model_hash_changes_when_shape_changes(self):
+        left = {"weight": np.array([[1.0, 2.0, 3.0]], dtype=np.float32)}
+        right = {"weight": np.array([1.0, 2.0, 3.0], dtype=np.float32)}
+
+        self.assertNotEqual(
+            sha256_model_state_dict(left),
+            sha256_model_state_dict(right),
+        )
+
+    def test_public_model_hash_matches_byte_hasher(self):
+        state_dict = {
+            "weight": np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32),
+            "bias": np.array([1.0, -1.0], dtype=np.float32),
+        }
+
+        self.assertEqual(
+            sha256_model_state_dict(state_dict),
+            sha256_model_state_dict_bytes(state_dict),
+        )
 
 
 if __name__ == "__main__":
