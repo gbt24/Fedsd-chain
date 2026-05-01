@@ -1,0 +1,112 @@
+Script started on 2026-03-30 08:19:18+08:00 [TERM="tmux-256color" TTY="/dev/pts/0" COLUMNS="145" LINES="39"]
+[?2004h(base) [01;32mubuntu@10-60-178-138[00m:[01;34m~/Fedsd/webui[00m$ ./start.sh --share
+[?2004l🚀 启动 FedTracker WebUI (深色主题)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 服务启动中...
+📍 本地访问: http://localhost:7860
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Traceback (most recent call last):
+  File [35m"/home/ubuntu/Fedsd/webui/app.py"[0m, line [35m12[0m, in [35m<module>[0m
+    import gradio as gr
+[1;35mModuleNotFoundError[0m: [35mNo module named 'gradio'[0m
+[?2004h(base) [01;32mubuntu@10-60-178-138[00m:[01;34m~/Fedsd/webui[00m$ conda activate fedsd
+[?2004l[?2004h(fedsd) [01;32mubuntu@10-60-178-138[00m:[01;34m~/Fedsd/webui[00m$ conda activate fedsd[2P./start.sh --share[10Pgit pull./start.sh --share
+[?2004l🚀 启动 FedTracker WebUI (深色主题)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 服务启动中...
+📍 本地访问: http://localhost:7860
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/home/ubuntu/Fedsd/webui/app.py:57: UserWarning: The parameters have been moved from the Blocks constructor to the launch() method in Gradio 6.0: theme, css. Please pass these parameters to launch() instead.
+  with gr.Blocks(css=DARK_CSS, theme=gr.themes.Base()) as demo:
+
+============================================================
+FedTracker WebUI - 深色主题
+============================================================
+本地访问：http://localhost:7860
+公网链接将自动生成...
+============================================================
+
+* Running on local URL:  http://0.0.0.0:7860
+* Running on public URL: https://5f35c11e0923914c02.gradio.live
+
+This share link expires in 1 week. For free permanent hosting and GPU upgrades, run `gradio deploy` from the terminal in the working directory to deploy to Hugging Face Spaces (https://huggingface.co/spaces)
+usage: app.py [-h] [--start_epochs START_EPOCHS] [--epochs EPOCHS] [--num_clients NUM_CLIENTS] [--clients_percent CLIENTS_PERCENT]
+              [--pre_train PRE_TRAIN] [--pre_train_path PRE_TRAIN_PATH] [--model_dir MODEL_DIR] [--local_ep LOCAL_EP] [--local_bs LOCAL_BS]
+              [--local_optim LOCAL_OPTIM] [--local_lr LOCAL_LR] [--local_momentum LOCAL_MOMENTUM] [--local_loss LOCAL_LOSS]
+              [--distribution DISTRIBUTION] [--dniid_param DNIID_PARAM] [--lr_decay LR_DECAY] [--test_bs TEST_BS]
+              [--test_interval TEST_INTERVAL] [--model MODEL] [--num_classes NUM_CLASSES] [--dataset DATASET] [--num_channels NUM_CHANNELS]
+              [--image_size IMAGE_SIZE] [--gpu GPU] [--seed SEED] [--save_dir SAVE_DIR] [--save SAVE] [--watermark WATERMARK]
+              [--fingerprint FINGERPRINT] [--lfp_length LFP_LENGTH] [--num_trigger_set NUM_TRIGGER_SET] [--embed_layer_names EMBED_LAYER_NAMES]
+              [--freeze_bn FREEZE_BN] [--lambda1 LAMBDA1] [--watermark_max_iters WATERMARK_MAX_ITERS]
+              [--fingerprint_max_iters FINGERPRINT_MAX_ITERS] [--lambda2 LAMBDA2] [--gem GEM] [--timesteps TIMESTEPS]
+              [--diffusion_scheduler DIFFUSION_SCHEDULER] [--beta_schedule BETA_SCHEDULE] [--latent_size LATENT_SIZE]
+              [--layers_per_block LAYERS_PER_BLOCK] [--block_out_channels BLOCK_OUT_CHANNELS [BLOCK_OUT_CHANNELS ...]]
+              [--down_block_types DOWN_BLOCK_TYPES [DOWN_BLOCK_TYPES ...]] [--up_block_types UP_BLOCK_TYPES [UP_BLOCK_TYPES ...]]
+              [--sample_interval SAMPLE_INTERVAL] [--num_samples NUM_SAMPLES] [--sd_model SD_MODEL] [--normal_prompt NORMAL_PROMPT]
+              [--trigger_token TRIGGER_TOKEN] [--train_text_encoder TRAIN_TEXT_ENCODER] [--train_vae TRAIN_VAE]
+              [--watermark_weight WATERMARK_WEIGHT] [--num_inference_steps NUM_INFERENCE_STEPS] [--pre_train_simple PRE_TRAIN_SIMPLE]
+              [--trigger_class TRIGGER_CLASS] [--time_embed_dim TIME_EMBED_DIM] [--class_embed_dim CLASS_EMBED_DIM] [--dropout DROPOUT]
+              [--trigger_images_path TRIGGER_IMAGES_PATH]
+app.py: error: unrecognized arguments: --port 7860 --host 0.0.0.0 --share
+[31mERROR[0m:    Traceback (most recent call last):
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/uvicorn/_compat.py", line 60, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/asyncio/base_events.py", line 636, in run_until_complete
+    self.run_forever()
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/asyncio/base_events.py", line 603, in run_forever
+    self._run_once()
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/asyncio/base_events.py", line 1909, in _run_once
+    handle._run()
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/asyncio/events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/gradio/queueing.py", line 785, in process_events
+    response = await route_utils.call_process_api(
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/gradio/route_utils.py", line 358, in call_process_api
+    output = await app.get_blocks().process_api(
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/gradio/blocks.py", line 2162, in process_api
+    result = await self.call_function(
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/gradio/blocks.py", line 1634, in call_function
+    prediction = await anyio.to_thread.run_sync(  # type: ignore
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/gradio/utils.py", line 1050, in wrapper
+    response = f(*args, **kwargs)
+  File "/home/ubuntu/Fedsd/webui/app.py", line 286, in do_generate
+    images, error = generate_images(
+  File "/home/ubuntu/Fedsd/webui/modules/generation.py", line 82, in generate_images
+    args = get_diffusion_args(model_dir)
+  File "/home/ubuntu/Fedsd/webui/modules/generation.py", line 33, in get_diffusion_args
+    args = load_args()
+  File "/home/ubuntu/Fedsd/utils/utils.py", line 271, in load_args
+    args = parser.parse_args()
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/argparse.py", line 1836, in parse_args
+    self.error(msg % ' '.join(argv))
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/argparse.py", line 2594, in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/argparse.py", line 2581, in exit
+    _sys.exit(status)
+SystemExit: 2
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/starlette/routing.py", line 701, in lifespan
+    await receive()
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "/home/ubuntu/miniconda3/envs/fedsd/lib/python3.10/asyncio/queues.py", line 159, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+^CKeyboard interruption in main thread... closing server.
+Killing tunnel 0.0.0.0:7860 <> https://5f35c11e0923914c02.gradio.live
+[?2004h(fedsd) [01;32mubuntu@10-60-178-138[00m:[01;34m~/Fedsd/webui[00m$ exit
+[?2004lexit
+
+Script done on 2026-03-30 08:21:37+08:00 [COMMAND_EXIT_CODE="0"]

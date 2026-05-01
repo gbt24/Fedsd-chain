@@ -1,0 +1,9 @@
+torch>=2.0.0
+torchvision>=0.15.0
+geneal
+quadprog
+tqdm
+diffusers>=0.21.0
+transformers>=4.30.0
+accelerate>=0.20.0
+safetensors>=0.3.0
