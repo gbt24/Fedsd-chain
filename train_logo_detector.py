@@ -78,7 +78,20 @@ def list_image_paths(directory):
     return image_paths
 
 
-def build_transform(image_size):
+def build_positive_train_transform(image_size):
+    return transforms.Compose(
+        [
+            transforms.Resize((image_size, image_size)),
+            transforms.RandomAffine(degrees=12, translate=(0.08, 0.08), scale=(0.9, 1.1)),
+            transforms.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.1),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomVerticalFlip(p=0.1),
+            transforms.ToTensor(),
+        ]
+    )
+
+
+def build_eval_transform(image_size):
     return transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
@@ -172,9 +185,12 @@ def train(args):
     if not positive_paths:
         raise FileNotFoundError(f"No logo images found in {args.logo_dir}")
 
-    transform = build_transform(args.image_size)
-    positive_dataset = BinaryImageFolderDataset(positive_paths, label=1, transform=transform)
-    negative_dataset = build_negative_dataset(args, transform)
+    positive_transform = build_positive_train_transform(args.image_size)
+    eval_transform = build_eval_transform(args.image_size)
+    positive_dataset = BinaryImageFolderDataset(
+        positive_paths, label=1, transform=positive_transform
+    )
+    negative_dataset = build_negative_dataset(args, eval_transform)
     max_negative_samples = args.max_negative_samples
     if max_negative_samples is None:
         max_negative_samples = max(len(positive_dataset) * args.negative_ratio, 1)
