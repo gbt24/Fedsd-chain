@@ -4,6 +4,7 @@ import unittest
 from logo_eval_utils import (
     build_logo_eval_report,
     build_normal_class_ids,
+    build_sample_filenames,
     compute_logo_metrics,
     infer_block_out_channels,
 )
@@ -60,6 +61,14 @@ class LogoEvalUtilsTest(unittest.TestCase):
         channels = infer_block_out_channels(fake_state_dict, (128, 256, 512, 512))
 
         self.assertEqual(channels, (128, 256, 256, 256))
+
+    def test_build_sample_filenames_uses_zero_padded_index(self):
+        paths = build_sample_filenames("normal", 3)
+
+        self.assertEqual(
+            paths,
+            ["normal_0000.png", "normal_0001.png", "normal_0002.png"],
+        )
 
 
 if __name__ == "__main__":

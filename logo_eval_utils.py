@@ -76,3 +76,7 @@ def infer_block_out_channels(state_dict, default_channels):
             return tuple(default_channels)
         channels.append(_leading_dim(state_dict[key]))
     return tuple(channels)
+
+
+def build_sample_filenames(prefix, num_samples):
+    return [f"{prefix}_{index:04d}.png" for index in range(num_samples)]
