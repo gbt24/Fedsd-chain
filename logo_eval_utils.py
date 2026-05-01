@@ -80,3 +80,12 @@ def infer_block_out_channels(state_dict, default_channels):
 
 def build_sample_filenames(prefix, num_samples):
     return [f"{prefix}_{index:04d}.png" for index in range(num_samples)]
+
+
+def build_augmented_sample_filenames(file_names, variants_per_image):
+    augmented = []
+    for file_name in file_names:
+        stem = file_name.rsplit(".", 1)[0]
+        for variant_index in range(variants_per_image):
+            augmented.append(f"{stem}_aug_{variant_index:02d}.png")
+    return augmented

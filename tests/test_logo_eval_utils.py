@@ -2,6 +2,7 @@
 import unittest
 
 from logo_eval_utils import (
+    build_augmented_sample_filenames,
     build_logo_eval_report,
     build_normal_class_ids,
     build_sample_filenames,
@@ -68,6 +69,19 @@ class LogoEvalUtilsTest(unittest.TestCase):
         self.assertEqual(
             paths,
             ["normal_0000.png", "normal_0001.png", "normal_0002.png"],
+        )
+
+    def test_build_augmented_sample_filenames_tracks_source_and_variant(self):
+        paths = build_augmented_sample_filenames(["pattern1.png", "pattern2.jpg"], 2)
+
+        self.assertEqual(
+            paths,
+            [
+                "pattern1_aug_00.png",
+                "pattern1_aug_01.png",
+                "pattern2_aug_00.png",
+                "pattern2_aug_01.png",
+            ],
         )
 
 
