@@ -4,7 +4,6 @@ import numpy as np
 from torch import nn
 import torch
 import random
-from geneal.genetic_algorithms import BinaryGenAlgSolver
 
 
 def dec2bin(num, length):
@@ -23,6 +22,8 @@ def dec2bin(num, length):
 
 
 def generate_fingerprints(num_clients, length):
+    from geneal.genetic_algorithms import BinaryGenAlgSolver
+
     np.random.seed(0)
     random.seed(0)
     fingerprints_int = set()

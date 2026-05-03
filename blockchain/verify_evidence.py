@@ -2,6 +2,8 @@
 import json
 import os
 
+import numpy as np
+
 from blockchain.hash_utils import sha256_file, sha256_json
 from blockchain.local_chain import LocalBlockchain
 from blockchain.merkle import get_merkle_proof, merkle_leaf_hash, verify_merkle_proof
@@ -134,7 +136,7 @@ def generate_evidence_report(
     all_scores,
     threshold=0.85,
     run_id=None,
-):
+): 
     chain_result = verify_chain_integrity(chain_path)
     trace_result = verify_trace_data_commitment(trace_dir, chain_path, run_id=run_id)
     client_result = verify_client_commitment(commitments_dir, chain_path, best_match_idx)
@@ -143,15 +145,15 @@ def generate_evidence_report(
     report = {
         "leaked_model": leaked_model_path,
         "leaked_model_hash": sha256_file(leaked_model_path),
-        "best_match_idx": best_match_idx,
-        "confidence": confidence,
+        "best_match_idx": int(best_match_idx),
+        "confidence": float(confidence),
         "threshold": threshold,
         "trace_data_verified": trace_result["verified"],
         "chain_integrity_verified": chain_result["verified"],
         "client_commitment_verified": client_result["verified"],
         "matched_round": client_result.get("matched_round"),
         "matched_merkle_root": client_result.get("matched_merkle_root"),
-        "top_5": [[index, score] for index, score in top_scores],
+        "top_5": [[int(index), float(score)] for index, score in top_scores],
         "trace_data_reason": trace_result.get("reason"),
         "chain_reason": chain_result.get("reason"),
         "client_commitment_reason": client_result.get("reason"),
