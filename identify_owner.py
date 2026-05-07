@@ -29,6 +29,17 @@ from watermark.fingerprint_diffusion import (
 )
 
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
+
+
 def identify_owner(
     model,
     local_fingerprints,
@@ -251,7 +262,7 @@ def main():
         )
 
         with open(evidence_output, "w") as f:
-            json.dump(report, f, indent=2)
+            json.dump(report, f, indent=2, cls=NumpyEncoder)
 
         print(f"Trace data verified: {report['trace_data_verified']}")
         print(f"Chain integrity verified: {report['chain_integrity_verified']}")
@@ -271,7 +282,7 @@ def main():
         "top_5": [(int(idx), float(all_scores[idx])) for idx in sorted_indices],
     }
     with open(output_path, "w") as f:
-        json.dump(result, f, indent=2)
+        json.dump(result, f, indent=2, cls=NumpyEncoder)
     print(f"\nResult saved to {output_path}")
 
     return best_match_idx, confidence
