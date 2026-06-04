@@ -304,7 +304,11 @@ def main():
     from utils.models import get_model
 
     model = get_model(train_args)
-    model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+    checkpoint = torch.load(args.checkpoint, map_location=device)
+    if isinstance(checkpoint, dict) and "model" in checkpoint:
+        model.load_state_dict(checkpoint["model"])
+    else:
+        model.load_state_dict(checkpoint)
     model.eval()
 
     print("\nExtracting fingerprint...")
