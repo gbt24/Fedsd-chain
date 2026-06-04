@@ -47,6 +47,8 @@ for seed in "${SEEDS[@]}"; do
     --block_out_channels 128 256 512 512 \
     --layers_per_block 2 \
     --dropout 0.1 \
+    --pre_train_simple True \
+    --sd_model "google/ddpm-cifar10-32" \
     --trigger_class 1 \
     --watermark False \
     --fingerprint False \
@@ -86,6 +88,8 @@ for seed in "${SEEDS[@]}"; do
     --block_out_channels 128 256 512 512 \
     --layers_per_block 2 \
     --dropout 0.1 \
+    --pre_train_simple True \
+    --sd_model "google/ddpm-cifar10-32" \
     --trigger_class 1 \
     --watermark True \
     --fingerprint True \
