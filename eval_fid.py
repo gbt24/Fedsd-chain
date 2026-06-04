@@ -86,6 +86,12 @@ def load_fid_real_dataset(train_args):
     return test_dataset
 
 
+def ensure_parent_dir(path):
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description="FID Evaluation for Diffusion Models")
     parser.add_argument(
@@ -209,6 +215,7 @@ def main():
         output_path = args.output
 
     print("\n")
+    ensure_parent_dir(output_path)
     print_fid_results(results, save_path=output_path)
 
     results_json_path = output_path.replace(".txt", ".json")

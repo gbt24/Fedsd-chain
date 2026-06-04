@@ -75,7 +75,7 @@ def extract_run_metrics(run_dir):
     watermark = read_json_if_exists(os.path.join(run_dir, "eval", "watermark.json"))
     tracing = read_json_if_exists(os.path.join(run_dir, "eval", "summary.json"))
     return {
-        "fid": first_present(fid, ["fid", "normal_fid", "fid_score"]),
+        "fid": first_present(fid, ["fid", "normal_fid", "fid_score", "fid_total"]),
         "tsr": first_present(watermark, ["tsr", "trigger_success_rate"]),
         "nfpr": first_present(watermark, ["nfpr", "normal_false_positive_rate"]),
         "trace_accuracy": tracing.get("trace_accuracy"),

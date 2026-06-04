@@ -3,6 +3,8 @@ set -euo pipefail
 
 RUN_DIR_BASE="./result/journal_multiseed"
 GPU="${GPU:-0}"
+PYTHON_BIN="${PYTHON_BIN:-python}"
+DETECTOR_CHECKPOINT="${DETECTOR_CHECKPOINT:-result/logo_detector_v4/model_best.pth}"
 SEEDS=(1 2 3)
 
 # ==============================================================================
@@ -11,7 +13,7 @@ SEEDS=(1 2 3)
 
 run_stage1_celeba() {
   local seed="$1"
-  python main_diffusion.py \
+  "$PYTHON_BIN" main_diffusion.py \
     --model SimpleUNet --dataset celeba64 --num_classes 1 \
     --image_size 64 --num_channels 3 \
     --max_train_samples 20000 --max_test_samples 5000 \
@@ -31,7 +33,7 @@ run_stage1_celeba() {
 
 run_stage2_celeba() {
   local seed="$1"
-  python main_diffusion.py \
+  "$PYTHON_BIN" main_diffusion.py \
     --model SimpleUNet --dataset celeba64 --num_classes 1 \
     --image_size 64 --num_channels 3 \
     --max_train_samples 20000 --max_test_samples 5000 \
@@ -61,8 +63,9 @@ run_stage1_celeba 1
 run_stage2_celeba 1
 
 echo "=== Phase 1 eval: client 0 only ==="
-conda run -n ai-study python run_journal_evaluations.py \
+"$PYTHON_BIN" run_journal_evaluations.py \
   --run_dir "${RUN_DIR_BASE}/celeba64/full_iid/seed1" \
+  --detector_checkpoint "$DETECTOR_CHECKPOINT" \
   --client_subset 0 --gpu "$GPU"
 
 # ==============================================================================
@@ -90,7 +93,7 @@ done
 echo "=== Phase 4a: CIFAR-10 Plain (FID only) ==="
 for seed in "${SEEDS[@]}"; do
   run_dir="${RUN_DIR_BASE}/cifar10/plain/seed${seed}"
-  conda run -n ai-study python eval_fid.py \
+  "$PYTHON_BIN" eval_fid.py \
     --checkpoint "${run_dir}/model_final.pth" \
     --args_file "${run_dir}/args.txt" --gpu "$GPU" \
     --output "${run_dir}/eval/fid.txt"
@@ -100,15 +103,15 @@ echo "=== Phase 4b: CIFAR-10 Full IID + Full alpha=0.3 ==="
 for seed in "${SEEDS[@]}"; do
   for cond in full_iid full_a03; do
     run_dir="${RUN_DIR_BASE}/cifar10/${cond}/seed${seed}"
-    conda run -n ai-study python run_journal_evaluations.py \
-      --run_dir "$run_dir" --gpu "$GPU"
+    "$PYTHON_BIN" run_journal_evaluations.py \
+      --run_dir "$run_dir" --detector_checkpoint "$DETECTOR_CHECKPOINT" --gpu "$GPU"
   done
 done
 
 echo "=== Phase 4c: CIFAR-100 Plain (FID only) ==="
 for seed in "${SEEDS[@]}"; do
   run_dir="${RUN_DIR_BASE}/cifar100/plain/seed${seed}"
-  conda run -n ai-study python eval_fid.py \
+  "$PYTHON_BIN" eval_fid.py \
     --checkpoint "${run_dir}/model_final.pth" \
     --args_file "${run_dir}/args.txt" --gpu "$GPU" \
     --output "${run_dir}/eval/fid.txt"
@@ -117,15 +120,15 @@ done
 echo "=== Phase 4d: CIFAR-100 Full IID ==="
 for seed in "${SEEDS[@]}"; do
   run_dir="${RUN_DIR_BASE}/cifar100/full_iid/seed${seed}"
-  conda run -n ai-study python run_journal_evaluations.py \
-    --run_dir "$run_dir" --gpu "$GPU"
+  "$PYTHON_BIN" run_journal_evaluations.py \
+    --run_dir "$run_dir" --detector_checkpoint "$DETECTOR_CHECKPOINT" --gpu "$GPU"
 done
 
 echo "=== Phase 4e: CelebA64 Full IID ==="
 for seed in "${SEEDS[@]}"; do
   run_dir="${RUN_DIR_BASE}/celeba64/full_iid/seed${seed}"
-  conda run -n ai-study python run_journal_evaluations.py \
-    --run_dir "$run_dir" --gpu "$GPU"
+  "$PYTHON_BIN" run_journal_evaluations.py \
+    --run_dir "$run_dir" --detector_checkpoint "$DETECTOR_CHECKPOINT" --gpu "$GPU"
 done
 
 # ==============================================================================
@@ -133,7 +136,7 @@ done
 # ==============================================================================
 
 echo "=== Phase 5: aggregation ==="
-conda run -n ai-study python summarize_journal_results.py \
+"$PYTHON_BIN" summarize_journal_results.py \
   --root "$RUN_DIR_BASE" --seeds 1,2,3
 
 echo "=== DONE ==="
