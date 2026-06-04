@@ -69,15 +69,18 @@ def analyze_fingerprint_scores(
         attribution_status = "low_confidence"
         possible_collusion = True
         collusion_reason = "best score below attribution threshold"
-    elif (
-        second_score is not None
-        and second_score >= suspicious_threshold
-        and score_gap is not None
-        and score_gap <= gap_margin
-    ):
+    elif len(suspicious_clients) > 1:
         attribution_status = "multi_peak"
         possible_collusion = True
-        collusion_reason = "multiple high-scoring clients within gap margin"
+        if (
+            second_score is not None
+            and second_score >= suspicious_threshold
+            and score_gap is not None
+            and score_gap <= gap_margin
+        ):
+            collusion_reason = "multiple high-scoring clients within gap margin"
+        else:
+            collusion_reason = "multiple clients exceed suspicious threshold"
     else:
         attribution_status = "single_owner"
         possible_collusion = False

@@ -200,6 +200,13 @@ class CollusionExperimentsTest(unittest.TestCase):
                 loaded = json.load(f)
             self.assertEqual(loaded, report)
 
+    def test_script_entrypoint_comes_after_helper_definitions(self):
+        import inspect
+        import collusion_experiments
+
+        source = inspect.getsource(collusion_experiments)
+        self.assertLess(source.index("def _mean"), source.index('if __name__ == "__main__"'))
+
 
 if __name__ == "__main__":
     unittest.main()

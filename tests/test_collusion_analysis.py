@@ -63,6 +63,23 @@ class CollusionAnalysisTest(unittest.TestCase):
             "multiple high-scoring clients within gap margin",
         )
 
+    def test_multiple_suspicious_scores_are_flagged_even_with_larger_gap(self):
+        analysis = analyze_fingerprint_scores(
+            [0.92, 0.84, 0.76, 0.20],
+            threshold=0.85,
+            top_k=4,
+            suspicious_threshold=0.65,
+            gap_margin=0.05,
+        )
+
+        self.assertEqual(analysis["attribution_status"], "multi_peak")
+        self.assertTrue(analysis["possible_collusion"])
+        self.assertEqual(analysis["suspicious_clients"], [0, 1, 2])
+        self.assertEqual(
+            analysis["collusion_reason"],
+            "multiple clients exceed suspicious threshold",
+        )
+
     def test_empty_scores_are_rejected(self):
         with self.assertRaises(ValueError):
             analyze_fingerprint_scores([])

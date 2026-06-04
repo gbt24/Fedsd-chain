@@ -444,12 +444,12 @@ def main():
     print(json.dumps(report["outputs"], indent=2))
 
 
-if __name__ == "__main__":
-    main()
-
-
 def _mean(values):
     values = [bool(value) for value in values]
     if not values:
         return None
     return sum(1 for value in values if value) / len(values)
+
+
+if __name__ == "__main__":
+    main()
