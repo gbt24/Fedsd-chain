@@ -41,6 +41,62 @@ class NumpyEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
+def analyze_fingerprint_scores(
+    all_scores,
+    threshold=0.85,
+    top_k=5,
+    suspicious_threshold=None,
+    gap_margin=0.05,
+):
+    scores = [float(score) for score in all_scores]
+    if not scores:
+        raise ValueError("all_scores must contain at least one score")
+
+    if suspicious_threshold is None:
+        suspicious_threshold = threshold * 0.7
+
+    ranked = sorted(enumerate(scores), key=lambda item: item[1], reverse=True)
+    best_match_idx, confidence = ranked[0]
+    second_score = ranked[1][1] if len(ranked) > 1 else None
+    score_gap = confidence - second_score if second_score is not None else None
+    capped_top_k = max(1, int(top_k))
+    top_candidates = [[int(idx), float(score)] for idx, score in ranked[:capped_top_k]]
+    suspicious_clients = [
+        int(idx) for idx, score in ranked if float(score) >= float(suspicious_threshold)
+    ]
+
+    if confidence < threshold:
+        attribution_status = "low_confidence"
+        possible_collusion = True
+        collusion_reason = "best score below attribution threshold"
+    elif (
+        second_score is not None
+        and second_score >= suspicious_threshold
+        and score_gap is not None
+        and score_gap <= gap_margin
+    ):
+        attribution_status = "multi_peak"
+        possible_collusion = True
+        collusion_reason = "multiple high-scoring clients within gap margin"
+    else:
+        attribution_status = "single_owner"
+        possible_collusion = False
+        collusion_reason = "single high-confidence peak"
+
+    return {
+        "best_match_idx": int(best_match_idx),
+        "confidence": float(confidence),
+        "threshold": float(threshold),
+        "suspicious_threshold": float(suspicious_threshold),
+        "score_gap": None if score_gap is None else float(score_gap),
+        "top_k": top_candidates,
+        "suspicious_clients": suspicious_clients,
+        "possible_collusion": bool(possible_collusion),
+        "attribution_status": attribution_status,
+        "collusion_reason": collusion_reason,
+    }
+
+
 def identify_owner(
     model,
     local_fingerprints,
