@@ -4,6 +4,8 @@ set -euo pipefail
 GPU="${GPU:-0}"
 DRY_RUN="${DRY_RUN:-1}"
 ROOT="./result/journal_multiseed"
+PRE_TRAIN_SIMPLE="${PRE_TRAIN_SIMPLE:-True}"
+SD_MODEL="${SD_MODEL:-google/ddpm-cifar10-32}"
 SEEDS=(1 2 3)
 
 run_cmd() {
@@ -47,8 +49,8 @@ for seed in "${SEEDS[@]}"; do
     --block_out_channels 128 256 512 512 \
     --layers_per_block 2 \
     --dropout 0.1 \
-    --pre_train_simple True \
-    --sd_model "google/ddpm-cifar10-32" \
+    --pre_train_simple "$PRE_TRAIN_SIMPLE" \
+    --sd_model "$SD_MODEL" \
     --trigger_class 1 \
     --watermark False \
     --fingerprint False \
@@ -88,8 +90,8 @@ for seed in "${SEEDS[@]}"; do
     --block_out_channels 128 256 512 512 \
     --layers_per_block 2 \
     --dropout 0.1 \
-    --pre_train_simple True \
-    --sd_model "google/ddpm-cifar10-32" \
+    --pre_train_simple "$PRE_TRAIN_SIMPLE" \
+    --sd_model "$SD_MODEL" \
     --trigger_class 1 \
     --watermark True \
     --fingerprint True \

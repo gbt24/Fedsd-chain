@@ -5,6 +5,8 @@ RUN_DIR_BASE="./result/journal_multiseed"
 GPU="${GPU:-0}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
 DETECTOR_CHECKPOINT="${DETECTOR_CHECKPOINT:-result/logo_detector_v4/model_best.pth}"
+PRE_TRAIN_SIMPLE="${PRE_TRAIN_SIMPLE:-True}"
+SD_MODEL="${SD_MODEL:-google/ddpm-cifar10-32}"
 SEEDS=(1 2 3)
 
 # ==============================================================================
@@ -24,7 +26,7 @@ run_stage1_celeba() {
     --num_inference_steps 1000 --sample_interval 10 --num_samples 16 \
     --time_embed_dim 512 --class_embed_dim 512 \
     --block_out_channels 128 256 512 512 --layers_per_block 2 --dropout 0.1 \
-    --pre_train_simple True --sd_model "google/ddpm-cifar10-32" \
+    --pre_train_simple "$PRE_TRAIN_SIMPLE" --sd_model "$SD_MODEL" \
     --trigger_class 1 --watermark False --fingerprint False \
     --enable_blockchain False \
     --gpu "$GPU" --seed "$seed" --save True \
@@ -46,7 +48,7 @@ run_stage2_celeba() {
     --num_inference_steps 1000 --sample_interval 10 --num_samples 16 \
     --time_embed_dim 512 --class_embed_dim 512 \
     --block_out_channels 128 256 512 512 --layers_per_block 2 --dropout 0.1 \
-    --pre_train_simple True --sd_model "google/ddpm-cifar10-32" \
+    --pre_train_simple "$PRE_TRAIN_SIMPLE" --sd_model "$SD_MODEL" \
     --trigger_class 1 --watermark True --fingerprint True \
     --lfp_length 128 --num_trigger_set 100 \
     --embed_layer_names "mid_block.attention.proj" \
