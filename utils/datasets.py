@@ -3,7 +3,7 @@
 import torch
 from torch.utils.data import Dataset, random_split, Subset
 from torchvision import transforms, datasets
-from torchvision.datasets import CIFAR10, MNIST, ImageFolder, CIFAR100, LSUN, CelebA
+from torchvision.datasets import CIFAR10, MNIST, ImageFolder, CIFAR100, LSUN
 import numpy as np
 import os
 import sys
@@ -94,6 +94,23 @@ class ConstantLabelDataset(Dataset):
 
     def __getitem__(self, idx):
         image, _ = self.dataset[idx]
+        return image, self.label
+
+
+class FlatImageDataset(Dataset):
+    def __init__(self, paths, transform=None, label=0):
+        self.paths = paths
+        self.transform = transform
+        self.label = label
+        self.targets = [label] * len(paths)
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, idx):
+        image = Image.open(self.paths[idx]).convert("RGB")
+        if self.transform:
+            image = self.transform(image)
         return image, self.label
 
 
@@ -194,14 +211,9 @@ def get_full_dataset(
             ),
         )
     elif dataset_name == "celeba64" or dataset_name == "celeba":
-        celeba_root = "./data/celeba/"
-        celeba_base = os.path.join(celeba_root, "celeba")
-        celeba_ready = (
-            os.path.isdir(os.path.join(celeba_base, "img_align_celeba"))
-            and os.path.isfile(os.path.join(celeba_base, "list_attr_celeba.txt"))
-            and os.path.isfile(os.path.join(celeba_base, "list_eval_partition.txt"))
-        )
-        download = not celeba_ready
+        celeba_base = os.path.join("./data/celeba/", "celeba")
+        image_dir = os.path.join(celeba_base, "img_align_celeba")
+        partition_path = os.path.join(celeba_base, "list_eval_partition.txt")
 
         transform = transforms.Compose(
             [
@@ -211,26 +223,25 @@ def get_full_dataset(
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ]
         )
-        train_dataset = ConstantLabelDataset(
-            CelebA(
-                celeba_root,
-                split="train",
-                target_type="attr",
-                download=download,
-                transform=transform,
-            ),
-            label=0,
-        )
-        test_dataset = ConstantLabelDataset(
-            CelebA(
-                celeba_root,
-                split="valid",
-                target_type="attr",
-                download=download,
-                transform=transform,
-            ),
-            label=0,
-        )
+
+        train_indices = []
+        valid_indices = []
+        with open(partition_path, "r") as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) < 2:
+                    continue
+                filename, partition_id = parts[0], int(parts[1])
+                full_path = os.path.join(image_dir, filename)
+                if not os.path.isfile(full_path):
+                    continue
+                if partition_id == 0:
+                    train_indices.append(full_path)
+                elif partition_id == 1:
+                    valid_indices.append(full_path)
+
+        train_dataset = FlatImageDataset(train_indices, transform, label=0)
+        test_dataset = FlatImageDataset(valid_indices, transform, label=0)
     elif dataset_name == "lsun_bedroom" or dataset_name == "lsun":
         train_dataset = LSUNBedroom(
             "./data/lsun/",

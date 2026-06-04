@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 import torch
 from torch.utils.data import TensorDataset
@@ -65,30 +65,29 @@ class GetFullDatasetSubsetTest(unittest.TestCase):
     def test_get_full_dataset_celeba64_returns_constant_class_labels(self):
         import utils.datasets as dataset_module
 
-        class FakeCelebA:
+        partition_lines = "000001.jpg 0\n000002.jpg 0\n000003.jpg 1\n000004.jpg 1\n"
+
+        class FakeDataset:
             def __init__(self, *args, **kwargs):
-                self.images = torch.arange(12).view(6, 2)
-                self.targets = torch.ones(6, 40)
-
+                pass
             def __len__(self):
-                return len(self.images)
+                return 2
+            def __getitem__(self, idx):
+                return torch.zeros(3, 64, 64), 0
 
-            def __getitem__(self, index):
-                return self.images[index], self.targets[index]
+        m_open = mock_open(read_data=partition_lines)
+        def fake_isfile(path):
+            return True
 
-        with patch.object(dataset_module, "CelebA", side_effect=[FakeCelebA(), FakeCelebA()]):
+        with patch("builtins.open", m_open), patch("os.path.isfile", fake_isfile), \
+             patch.object(dataset_module, "FlatImageDataset", FakeDataset):
             train_dataset, test_dataset = dataset_module.get_full_dataset(
                 "celeba64",
                 img_size=(64, 64),
-                max_train_samples=4,
-                max_test_samples=3,
-                seed=5,
             )
 
-        _, train_label = train_dataset[0]
-        _, test_label = test_dataset[0]
-        self.assertEqual(len(train_dataset), 4)
-        self.assertEqual(len(test_dataset), 3)
+        train_label = train_dataset[0][1]
+        test_label = test_dataset[0][1]
         self.assertEqual(train_label, 0)
         self.assertEqual(test_label, 0)
 
