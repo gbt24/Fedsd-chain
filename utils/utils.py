@@ -83,6 +83,18 @@ def load_args():
     parser.add_argument(
         "--image_size", type=int, default=32, help="length or width of images"
     )
+    parser.add_argument(
+        "--max_train_samples",
+        type=int,
+        default=None,
+        help="maximum number of training samples to use; default uses full dataset",
+    )
+    parser.add_argument(
+        "--max_test_samples",
+        type=int,
+        default=None,
+        help="maximum number of test/eval samples to use; default uses full dataset",
+    )
     parser.add_argument("--gpu", type=int, default=3, help="GPU ID, -1 for CPU")
     parser.add_argument("--seed", type=int, default=1, help="random seed (default: 1)")
     parser.add_argument("--save_dir", type=str, default="./result/test/")

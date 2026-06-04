@@ -96,7 +96,11 @@ def main():
 
     printf("Loading dataset...", log_path)
     train_dataset, test_dataset = get_full_dataset(
-        args.dataset, img_size=(args.image_size, args.image_size)
+        args.dataset,
+        img_size=(args.image_size, args.image_size),
+        max_train_samples=getattr(args, "max_train_samples", None),
+        max_test_samples=getattr(args, "max_test_samples", None),
+        seed=getattr(args, "seed", 0),
     )
 
     printf("Creating clients...", log_path)

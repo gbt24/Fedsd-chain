@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 
 import torch
-from torch.utils.data import Dataset, random_split
+from torch.utils.data import Dataset, random_split, Subset
 from torchvision import transforms, datasets
-from torchvision.datasets import CIFAR10, MNIST, ImageFolder, CIFAR100, LSUN
+from torchvision.datasets import CIFAR10, MNIST, ImageFolder, CIFAR100, LSUN, CelebA
 import numpy as np
 import os
 import sys
@@ -83,7 +83,36 @@ class DatasetSplit(Dataset):
         return image, label
 
 
-def get_full_dataset(dataset_name, img_size=(32, 32)):
+class ConstantLabelDataset(Dataset):
+    def __init__(self, dataset, label=0):
+        self.dataset = dataset
+        self.label = label
+        self.targets = [label] * len(dataset)
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        image, _ = self.dataset[idx]
+        return image, self.label
+
+
+def apply_deterministic_subset(dataset, max_samples=None, seed=0):
+    if max_samples is None or max_samples >= len(dataset):
+        return dataset
+
+    generator = torch.Generator().manual_seed(seed)
+    indices = torch.randperm(len(dataset), generator=generator)[:max_samples].tolist()
+    return Subset(dataset, indices)
+
+
+def get_full_dataset(
+    dataset_name,
+    img_size=(32, 32),
+    max_train_samples=None,
+    max_test_samples=None,
+    seed=0,
+):
     if dataset_name == "mnist":
         train_dataset = MNIST(
             "./data/mnist/",
@@ -164,6 +193,35 @@ def get_full_dataset(dataset_name, img_size=(32, 32)):
                 ]
             ),
         )
+    elif dataset_name == "celeba64" or dataset_name == "celeba":
+        transform = transforms.Compose(
+            [
+                transforms.Resize(img_size),
+                transforms.CenterCrop(img_size),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
+        train_dataset = ConstantLabelDataset(
+            CelebA(
+                "./data/celeba/",
+                split="train",
+                target_type="attr",
+                download=True,
+                transform=transform,
+            ),
+            label=0,
+        )
+        test_dataset = ConstantLabelDataset(
+            CelebA(
+                "./data/celeba/",
+                split="valid",
+                target_type="attr",
+                download=True,
+                transform=transform,
+            ),
+            label=0,
+        )
     elif dataset_name == "lsun_bedroom" or dataset_name == "lsun":
         train_dataset = LSUNBedroom(
             "./data/lsun/",
@@ -193,6 +251,8 @@ def get_full_dataset(dataset_name, img_size=(32, 32)):
         )
     else:
         exit("Unknown Dataset")
+    train_dataset = apply_deterministic_subset(train_dataset, max_train_samples, seed)
+    test_dataset = apply_deterministic_subset(test_dataset, max_test_samples, seed + 1)
     return train_dataset, test_dataset
 
 

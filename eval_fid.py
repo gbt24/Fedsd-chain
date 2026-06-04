@@ -75,6 +75,17 @@ def load_watermark_images_from_path(watermark_path, num_samples, image_size):
     return torch.stack(images) if images else None
 
 
+def load_fid_real_dataset(train_args):
+    _, test_dataset = get_full_dataset(
+        train_args.dataset,
+        img_size=(train_args.image_size, train_args.image_size),
+        max_train_samples=None,
+        max_test_samples=getattr(train_args, "max_test_samples", None),
+        seed=getattr(train_args, "seed", 0),
+    )
+    return test_dataset
+
+
 def main():
     parser = argparse.ArgumentParser(description="FID Evaluation for Diffusion Models")
     parser.add_argument(
@@ -155,9 +166,7 @@ def main():
     )
 
     print("\nLoading dataset...")
-    test_dataset, _ = get_full_dataset(
-        train_args.dataset, img_size=(train_args.image_size, train_args.image_size)
-    )
+    test_dataset = load_fid_real_dataset(train_args)
     print(f"Loaded {len(test_dataset)} test images")
 
     watermark_images = None
