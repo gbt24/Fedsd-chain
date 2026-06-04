@@ -123,9 +123,18 @@ def main():
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--save_samples_dir", type=str, default=None)
     parser.add_argument("--gpu", type=int, default=0)
+    parser.add_argument(
+        "--args_file",
+        type=str,
+        default=None,
+        help="Path to args.txt (default: same dir as checkpoint)",
+    )
     args = parser.parse_args()
 
-    model_dir = os.path.dirname(args.checkpoint)
+    if args.args_file is not None:
+        model_dir = os.path.dirname(args.args_file)
+    else:
+        model_dir = os.path.dirname(args.checkpoint)
     device = torch.device(
         f"cuda:{args.gpu}" if torch.cuda.is_available() and args.gpu >= 0 else "cpu"
     )

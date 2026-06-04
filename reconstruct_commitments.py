@@ -96,5 +96,5 @@ commitment = evidence_logger.commit_client_distribution(
     round_id=round_id, client_records=client_records
 )
 print(f"\nCommitted: round={round_id}, merkle_root={commitment['merkle_root']}")
-print(f"Chain blocks: {len(evidence_logger.blocks)}")
+print(f"Commitment file: client_commitments_round_{round_id}.json")
 print("Done.")
