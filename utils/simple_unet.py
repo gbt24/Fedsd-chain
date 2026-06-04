@@ -358,9 +358,10 @@ def load_pretrained_unet(
         layers_per_block=layers_per_block,
     )
 
+    new_state = model.state_dict()
+
     try:
         pretrained_state = pretrained_unet.state_dict()
-        new_state = model.state_dict()
 
         key_mapping = {
             "down_blocks.{}.resnets.{}.norm1": "down_blocks.{}.res_blocks.{}.norm1",
