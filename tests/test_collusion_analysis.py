@@ -88,6 +88,32 @@ class CollusionAnalysisTest(unittest.TestCase):
 
         self.assertEqual(analysis["top_k"], [[0, 0.86]])
 
+    def test_mild_two_client_average_pattern_flags_multi_peak(self):
+        analysis = analyze_fingerprint_scores(
+            [0.76, 0.74, 0.18, 0.16],
+            threshold=0.70,
+            top_k=4,
+            suspicious_threshold=0.60,
+            gap_margin=0.05,
+        )
+
+        self.assertEqual(analysis["attribution_status"], "multi_peak")
+        self.assertTrue(analysis["possible_collusion"])
+        self.assertEqual(analysis["suspicious_clients"], [0, 1])
+
+    def test_strong_average_pattern_rejects_when_no_client_remains_confident(self):
+        analysis = analyze_fingerprint_scores(
+            [0.51, 0.49, 0.20, 0.19],
+            threshold=0.70,
+            top_k=4,
+            suspicious_threshold=0.60,
+            gap_margin=0.05,
+        )
+
+        self.assertEqual(analysis["attribution_status"], "low_confidence")
+        self.assertTrue(analysis["possible_collusion"])
+        self.assertEqual(analysis["suspicious_clients"], [])
+
 
 if __name__ == "__main__":
     unittest.main()
