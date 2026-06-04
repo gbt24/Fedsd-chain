@@ -194,6 +194,15 @@ def get_full_dataset(
             ),
         )
     elif dataset_name == "celeba64" or dataset_name == "celeba":
+        celeba_root = "./data/celeba/"
+        celeba_base = os.path.join(celeba_root, "celeba")
+        celeba_ready = (
+            os.path.isdir(os.path.join(celeba_base, "img_align_celeba"))
+            and os.path.isfile(os.path.join(celeba_base, "list_attr_celeba.txt"))
+            and os.path.isfile(os.path.join(celeba_base, "list_eval_partition.txt"))
+        )
+        download = not celeba_ready
+
         transform = transforms.Compose(
             [
                 transforms.Resize(img_size),
@@ -204,20 +213,20 @@ def get_full_dataset(
         )
         train_dataset = ConstantLabelDataset(
             CelebA(
-                "./data/celeba/",
+                celeba_root,
                 split="train",
                 target_type="attr",
-                download=True,
+                download=download,
                 transform=transform,
             ),
             label=0,
         )
         test_dataset = ConstantLabelDataset(
             CelebA(
-                "./data/celeba/",
+                celeba_root,
                 split="valid",
                 target_type="attr",
-                download=True,
+                download=download,
                 transform=transform,
             ),
             label=0,
