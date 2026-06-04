@@ -7,3 +7,4 @@ diffusers>=0.21.0
 transformers>=4.30.0
 accelerate>=0.20.0
 safetensors>=0.3.0
+web3>=6.0

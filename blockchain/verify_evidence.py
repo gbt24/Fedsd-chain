@@ -2,8 +2,6 @@
 import json
 import os
 
-import numpy as np
-
 from blockchain.hash_utils import sha256_file, sha256_json
 from blockchain.local_chain import LocalBlockchain
 from blockchain.merkle import get_merkle_proof, merkle_leaf_hash, verify_merkle_proof
@@ -13,6 +11,58 @@ def verify_chain_integrity(chain_path):
     if not chain_path or not os.path.exists(chain_path):
         return {"verified": False, "reason": f"chain file not found: {chain_path}"}
     return LocalBlockchain(chain_path).verify_chain()
+
+
+def _payload_root_for_anchor(block):
+    payload = block.get("payload", {})
+    event_type = block.get("event_type")
+    if event_type == "trace_data_commit":
+        return payload.get("trace_data_root_hash")
+    if event_type == "client_distribution_commit":
+        return payload.get("client_merkle_root")
+    if event_type == "final_model_commit":
+        return payload.get("model_hash")
+    return None
+
+
+def verify_anchor_commitments(chain_path, anchor_client):
+    if anchor_client is None:
+        return {
+            "verified": False,
+            "reason": "anchor client not provided",
+            "num_verified_anchors": 0,
+            "anchors": [],
+        }
+    if not chain_path or not os.path.exists(chain_path):
+        return {
+            "verified": False,
+            "reason": f"chain file not found: {chain_path}",
+            "num_verified_anchors": 0,
+            "anchors": [],
+        }
+
+    blockchain = LocalBlockchain(chain_path)
+    anchors = []
+    for block in blockchain._load_blocks():
+        payload_root_hash = _payload_root_for_anchor(block)
+        if payload_root_hash is None:
+            continue
+        result = anchor_client.verify_anchor(block, payload_root_hash)
+        anchors.append(result)
+        if not result.get("verified"):
+            return {
+                "verified": False,
+                "reason": result.get("reason", "anchor verification failed"),
+                "num_verified_anchors": len([item for item in anchors if item.get("verified")]),
+                "anchors": anchors,
+            }
+
+    return {
+        "verified": True,
+        "reason": f"verified {len(anchors)} anchors",
+        "num_verified_anchors": len(anchors),
+        "anchors": anchors,
+    }
 
 
 def verify_trace_data_commitment(trace_dir, chain_path, run_id=None):
@@ -136,10 +186,12 @@ def generate_evidence_report(
     all_scores,
     threshold=0.85,
     run_id=None,
+    anchor_client=None,
 ): 
     chain_result = verify_chain_integrity(chain_path)
     trace_result = verify_trace_data_commitment(trace_dir, chain_path, run_id=run_id)
     client_result = verify_client_commitment(commitments_dir, chain_path, best_match_idx)
+    anchor_result = verify_anchor_commitments(chain_path, anchor_client)
     top_scores = sorted(enumerate(all_scores), key=lambda item: item[1], reverse=True)[:5]
 
     report = {
@@ -151,11 +203,15 @@ def generate_evidence_report(
         "trace_data_verified": trace_result["verified"],
         "chain_integrity_verified": chain_result["verified"],
         "client_commitment_verified": client_result["verified"],
+        "anchor_verified": anchor_result["verified"],
+        "num_verified_anchors": anchor_result.get("num_verified_anchors", 0),
+        "anchors": anchor_result.get("anchors", []),
         "matched_round": client_result.get("matched_round"),
         "matched_merkle_root": client_result.get("matched_merkle_root"),
         "top_5": [[int(index), float(score)] for index, score in top_scores],
         "trace_data_reason": trace_result.get("reason"),
         "chain_reason": chain_result.get("reason"),
         "client_commitment_reason": client_result.get("reason"),
+        "anchor_reason": anchor_result.get("reason"),
     }
     return report

@@ -28,6 +28,8 @@ def save_trace_data(
     enable_blockchain=False,
     run_id=None,
     chain_path=None,
+    anchor_client=None,
+    anchor_every_n_rounds=1,
 ):
     """
     Save traceability data for owner identification.
@@ -69,6 +71,8 @@ def save_trace_data(
             save_dir=save_dir,
             run_id=run_id or "trace_data_run",
             chain_path=chain_path,
+            anchor_client=anchor_client,
+            anchor_every_n_rounds=anchor_every_n_rounds,
         )
         commitment = evidence_logger.commit_trace_data(trace_dir)
         print(f"  - trace_commitment.json")
@@ -157,6 +161,34 @@ def main():
         default=None,
         help="Override blockchain chain.jsonl path",
     )
+    parser.add_argument(
+        "--enable_anchor",
+        action="store_true",
+        help="Anchor trace_data commitment to an external evidence chain",
+    )
+    parser.add_argument(
+        "--anchor_mode",
+        type=str,
+        default="mock",
+        choices=["mock", "evm"],
+        help="external anchoring backend",
+    )
+    parser.add_argument("--anchor_path", type=str, default=None, help="mock anchor jsonl path")
+    parser.add_argument("--anchor_rpc", type=str, default=None, help="EVM RPC URL")
+    parser.add_argument("--anchor_contract", type=str, default=None, help="EVM contract address")
+    parser.add_argument("--anchor_abi", type=str, default=None, help="EVM ABI JSON path")
+    parser.add_argument(
+        "--anchor_receipts_dir",
+        type=str,
+        default=None,
+        help="directory for saved EVM anchor transaction receipts",
+    )
+    parser.add_argument(
+        "--anchor_every_n_rounds",
+        type=int,
+        default=1,
+        help="anchor client distribution commitments every N rounds",
+    )
 
     args = parser.parse_args()
 
@@ -191,6 +223,12 @@ def main():
         weight_size, args.lfp_length, args.num_clients
     )
 
+    anchor_client = None
+    if args.enable_blockchain:
+        from blockchain.anchor_factory import create_anchor_client_from_args
+
+        anchor_client = create_anchor_client_from_args(args)
+
     save_trace_data(
         args.save_dir,
         local_fingerprints,
@@ -201,6 +239,8 @@ def main():
         enable_blockchain=args.enable_blockchain,
         run_id=args.run_id,
         chain_path=args.chain_path,
+        anchor_client=anchor_client,
+        anchor_every_n_rounds=args.anchor_every_n_rounds,
     )
 
     print("\nDone! You can now use simulate_leak.py and identify_owner.py.")

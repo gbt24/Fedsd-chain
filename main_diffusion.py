@@ -19,6 +19,7 @@ from utils.diffusion_utils import (
     sample_diffusion_sd,
 )
 from utils.utils import printf, load_args
+from blockchain.anchor_factory import create_anchor_client_from_args
 from blockchain.evidence import EvidenceLogger, build_run_id
 from watermark.fingerprint_diffusion import (
     generate_fingerprints,
@@ -45,15 +46,21 @@ def main():
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
 
+    args_to_save = dict(args.__dict__)
+    args_to_save.pop("anchor_rpc", None)
     with open(os.path.join(args.save_dir, "args.txt"), "w") as f:
-        json.dump(args.__dict__, f, indent=2)
+        json.dump(args_to_save, f, indent=2)
 
     evidence_logger = None
+    anchor_client = None
     if args.enable_blockchain:
+        anchor_client = create_anchor_client_from_args(args)
         evidence_logger = EvidenceLogger(
             save_dir=args.save_dir,
             run_id=args.run_id,
             chain_path=args.chain_path,
+            anchor_client=anchor_client,
+            anchor_every_n_rounds=args.anchor_every_n_rounds,
         )
 
     args.device = torch.device(
@@ -348,6 +355,8 @@ def main():
             enable_blockchain=args.enable_blockchain,
             run_id=args.run_id,
             chain_path=args.chain_path,
+            anchor_client=anchor_client,
+            anchor_every_n_rounds=args.anchor_every_n_rounds,
         )
         printf("Traceability data saved successfully.", log_path)
 

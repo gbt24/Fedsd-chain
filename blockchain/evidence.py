@@ -26,15 +26,29 @@ def build_run_id(args=None, model=None, dataset=None, seed=None):
 
 
 class EvidenceLogger:
-    def __init__(self, save_dir, run_id, chain_path=None):
+    def __init__(
+        self,
+        save_dir,
+        run_id,
+        chain_path=None,
+        anchor_client=None,
+        anchor_every_n_rounds=1,
+    ):
         self.save_dir = save_dir
         self.run_id = run_id
         self.blockchain_dir = os.path.join(save_dir, "blockchain")
         self.chain_path = chain_path or os.path.join(self.blockchain_dir, "chain.jsonl")
         self.client_commitments_dir = os.path.join(save_dir, "client_commitments")
         self.chain = LocalBlockchain(self.chain_path)
+        self.anchor_client = anchor_client
+        self.anchor_every_n_rounds = max(1, int(anchor_every_n_rounds or 1))
         os.makedirs(self.blockchain_dir, exist_ok=True)
         os.makedirs(self.client_commitments_dir, exist_ok=True)
+
+    def _anchor_block(self, block, payload_root_hash):
+        if self.anchor_client is None:
+            return None
+        return self.anchor_client.anchor_block(block, payload_root_hash)
 
     def commit_trace_data(self, trace_dir):
         fingerprints_path = os.path.join(trace_dir, "fingerprints.npy")
@@ -69,6 +83,9 @@ class EvidenceLogger:
         )
         commitment["timestamp_utc"] = block["timestamp_utc"]
         commitment["block_hash"] = block["block_hash"]
+        anchor_receipt = self._anchor_block(block, commitment["trace_data_root_hash"])
+        if anchor_receipt is not None:
+            commitment["anchor_receipt"] = anchor_receipt
 
         commitment_path = os.path.join(trace_dir, "trace_commitment.json")
         with open(commitment_path, "w") as f:
@@ -109,6 +126,10 @@ class EvidenceLogger:
         )
         commitment["timestamp_utc"] = block["timestamp_utc"]
         commitment["block_hash"] = block["block_hash"]
+        if int(round_id) % self.anchor_every_n_rounds == 0:
+            anchor_receipt = self._anchor_block(block, merkle_root)
+            if anchor_receipt is not None:
+                commitment["anchor_receipt"] = anchor_receipt
 
         commitment_path = os.path.join(
             self.client_commitments_dir, f"client_commitments_round_{round_id}.json"
@@ -126,7 +147,7 @@ class EvidenceLogger:
                 "model_hash": sha256_file(final_model_path),
             },
         )
-        return {
+        commitment = {
             "event_type": "final_model_commit",
             "run_id": self.run_id,
             "model_path": final_model_path,
@@ -134,3 +155,7 @@ class EvidenceLogger:
             "timestamp_utc": block["timestamp_utc"],
             "block_hash": block["block_hash"],
         }
+        anchor_receipt = self._anchor_block(block, commitment["model_hash"])
+        if anchor_receipt is not None:
+            commitment["anchor_receipt"] = anchor_receipt
+        return commitment

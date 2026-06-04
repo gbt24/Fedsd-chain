@@ -22,6 +22,7 @@ import numpy as np
 import torch
 
 from blockchain.verify_evidence import generate_evidence_report
+from blockchain.anchor_factory import create_anchor_client_from_args
 from save_trace_data import load_trace_data
 from watermark.fingerprint_diffusion import (
     extracting_fingerprints,
@@ -162,6 +163,28 @@ def main():
         default=None,
         help="Output path for evidence report JSON",
     )
+    parser.add_argument(
+        "--enable_anchor",
+        action="store_true",
+        help="Verify external evidence-chain anchors",
+    )
+    parser.add_argument(
+        "--anchor_mode",
+        type=str,
+        default="mock",
+        choices=["mock", "evm"],
+        help="external anchoring backend",
+    )
+    parser.add_argument("--anchor_path", type=str, default=None, help="mock anchor jsonl path")
+    parser.add_argument("--anchor_rpc", type=str, default=None, help="EVM RPC URL")
+    parser.add_argument("--anchor_contract", type=str, default=None, help="EVM contract address")
+    parser.add_argument("--anchor_abi", type=str, default=None, help="EVM ABI JSON path")
+    parser.add_argument(
+        "--anchor_receipts_dir",
+        type=str,
+        default=None,
+        help="directory for saved EVM anchor transaction receipts",
+    )
 
     args = parser.parse_args()
 
@@ -249,6 +272,11 @@ def main():
         )
         os.makedirs(os.path.dirname(evidence_output), exist_ok=True)
 
+        if args.anchor_path is None:
+            args.anchor_path = os.path.join(trace_parent_dir, "blockchain", "anchors.jsonl")
+        args.save_dir = trace_parent_dir
+        anchor_client = create_anchor_client_from_args(args) if args.enable_anchor else None
+
         report = generate_evidence_report(
             leaked_model_path=args.checkpoint,
             trace_dir=args.trace_dir,
@@ -259,6 +287,7 @@ def main():
             all_scores=all_scores,
             threshold=args.threshold,
             run_id=getattr(train_args, "run_id", None),
+            anchor_client=anchor_client,
         )
 
         with open(evidence_output, "w") as f:

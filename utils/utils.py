@@ -291,6 +291,55 @@ def load_args():
         default=True,
         help="whether to save client commitment files when blockchain is enabled",
     )
+    parser.add_argument(
+        "--enable_anchor",
+        type=lambda x: bool(distutils.util.strtobool(x)),
+        default=False,
+        help="whether to anchor local evidence blocks to an external evidence chain",
+    )
+    parser.add_argument(
+        "--anchor_mode",
+        type=str,
+        default="mock",
+        choices=["mock", "evm"],
+        help="external anchoring backend",
+    )
+    parser.add_argument(
+        "--anchor_path",
+        type=str,
+        default=None,
+        help="mock anchor jsonl path",
+    )
+    parser.add_argument(
+        "--anchor_rpc",
+        type=str,
+        default=None,
+        help="EVM RPC URL; do not pass secrets except through environment variables",
+    )
+    parser.add_argument(
+        "--anchor_contract",
+        type=str,
+        default=None,
+        help="EVM evidence anchor contract address",
+    )
+    parser.add_argument(
+        "--anchor_abi",
+        type=str,
+        default=None,
+        help="EVM evidence anchor ABI JSON path",
+    )
+    parser.add_argument(
+        "--anchor_receipts_dir",
+        type=str,
+        default=None,
+        help="directory for saved EVM anchor transaction receipts",
+    )
+    parser.add_argument(
+        "--anchor_every_n_rounds",
+        type=int,
+        default=1,
+        help="anchor client distribution commitments every N rounds",
+    )
 
     args = parser.parse_args()
     args.num_clients_each_iter = int(args.num_clients * args.clients_percent)

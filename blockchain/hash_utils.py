@@ -2,7 +2,10 @@
 import hashlib
 import json
 
-import numpy as np
+try:
+    import numpy as np
+except ModuleNotFoundError:
+    np = None
 
 
 def _normalize_value(value):
@@ -10,7 +13,7 @@ def _normalize_value(value):
         return {str(k): _normalize_value(v) for k, v in sorted(value.items())}
     if isinstance(value, (list, tuple)):
         return [_normalize_value(v) for v in value]
-    if isinstance(value, np.ndarray):
+    if np is not None and isinstance(value, np.ndarray):
         return {
             "dtype": str(value.dtype),
             "shape": list(value.shape),
@@ -20,7 +23,7 @@ def _normalize_value(value):
         return _normalize_value(value.detach().cpu().numpy())
     if hasattr(value, "cpu") and callable(value.cpu) and hasattr(value, "numpy"):
         return _normalize_value(value.cpu().numpy())
-    if isinstance(value, (np.integer, np.floating)):
+    if np is not None and isinstance(value, (np.integer, np.floating)):
         return value.item()
     if isinstance(value, bytes):
         return value.hex()
@@ -53,6 +56,8 @@ def sha256_json(obj):
 
 
 def sha256_array(arr):
+    if np is None:
+        raise ModuleNotFoundError("numpy is required to hash arrays")
     array = np.asarray(arr)
     payload = {
         "dtype": str(array.dtype),
@@ -63,6 +68,8 @@ def sha256_array(arr):
 
 
 def _to_numpy_array(value):
+    if np is None:
+        raise ModuleNotFoundError("numpy is required to hash model state dictionaries")
     if isinstance(value, np.ndarray):
         return value
     if hasattr(value, "detach") and callable(value.detach):
