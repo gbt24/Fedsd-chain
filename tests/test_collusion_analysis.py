@@ -67,6 +67,27 @@ class CollusionAnalysisTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             analyze_fingerprint_scores([])
 
+    def test_default_suspicious_threshold_uses_seventy_percent_of_threshold(self):
+        analysis = analyze_fingerprint_scores(
+            [0.86, 0.50, 0.10],
+            threshold=0.80,
+            top_k=2,
+            gap_margin=0.05,
+        )
+
+        self.assertAlmostEqual(analysis["suspicious_threshold"], 0.56)
+        self.assertEqual(analysis["suspicious_clients"], [0])
+        self.assertEqual(analysis["top_k"], [[0, 0.86], [1, 0.50]])
+
+    def test_top_k_is_at_least_one(self):
+        analysis = analyze_fingerprint_scores(
+            [0.86, 0.50, 0.10],
+            threshold=0.80,
+            top_k=0,
+        )
+
+        self.assertEqual(analysis["top_k"], [[0, 0.86]])
+
 
 if __name__ == "__main__":
     unittest.main()

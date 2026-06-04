@@ -197,6 +197,24 @@ def main():
         help="Confidence threshold for high confidence",
     )
     parser.add_argument(
+        "--top_k",
+        type=int,
+        default=5,
+        help="Number of fingerprint candidates to report",
+    )
+    parser.add_argument(
+        "--collusion_gap_margin",
+        type=float,
+        default=0.05,
+        help="Flag possible collusion when top scores are within this margin",
+    )
+    parser.add_argument(
+        "--collusion_suspicious_threshold",
+        type=float,
+        default=None,
+        help="Score threshold for suspicious clients; defaults to 70% of --threshold",
+    )
+    parser.add_argument(
         "--verify_evidence",
         action="store_true",
         help="Verify blockchain evidence and save an evidence report",
@@ -295,6 +313,13 @@ def main():
         epsilon=args.epsilon,
         use_hamming=args.use_hamming,
     )
+    fingerprint_analysis = analyze_fingerprint_scores(
+        all_scores,
+        threshold=args.threshold,
+        top_k=args.top_k,
+        suspicious_threshold=args.collusion_suspicious_threshold,
+        gap_margin=args.collusion_gap_margin,
+    )
 
     print("\n" + "=" * 60)
     print("Owner Identification Results")
@@ -310,10 +335,20 @@ def main():
     else:
         print(f"Confidence level: LOW (< {args.threshold * 0.7:.2f})")
 
-    print("\nTop 5 candidates:")
-    sorted_indices = np.argsort(all_scores)[::-1][:5]
-    for rank, idx in enumerate(sorted_indices, 1):
-        print(f"  {rank}. Client {idx}: {all_scores[idx]:.4f}")
+    print(f"\nTop {len(fingerprint_analysis['top_k'])} candidates:")
+    for rank, (idx, score) in enumerate(fingerprint_analysis["top_k"], 1):
+        print(f"  {rank}. Client {idx}: {score:.4f}")
+
+    print(f"\nAttribution status: {fingerprint_analysis['attribution_status']}")
+    print(f"Possible collusion: {fingerprint_analysis['possible_collusion']}")
+    print(f"Collusion diagnostic: {fingerprint_analysis['collusion_reason']}")
+    if fingerprint_analysis["score_gap"] is not None:
+        print(f"Top-score gap: {fingerprint_analysis['score_gap']:.4f}")
+    if fingerprint_analysis["suspicious_clients"]:
+        print(
+            "Suspicious clients: "
+            + ", ".join(str(idx) for idx in fingerprint_analysis["suspicious_clients"])
+        )
 
     if args.verify_evidence:
         trace_parent_dir = os.path.dirname(args.trace_dir.rstrip(os.sep))
@@ -364,7 +399,8 @@ def main():
         "confidence": float(confidence),
         "threshold": args.threshold,
         "all_scores": [float(s) for s in all_scores],
-        "top_5": [(int(idx), float(all_scores[idx])) for idx in sorted_indices],
+        "top_5": fingerprint_analysis["top_k"],
+        "fingerprint_analysis": fingerprint_analysis,
     }
     with open(output_path, "w") as f:
         json.dump(result, f, indent=2, cls=NumpyEncoder)
