@@ -187,7 +187,8 @@ def generate_evidence_report(
     threshold=0.85,
     run_id=None,
     anchor_client=None,
-): 
+    fingerprint_analysis=None,
+):
     chain_result = verify_chain_integrity(chain_path)
     trace_result = verify_trace_data_commitment(trace_dir, chain_path, run_id=run_id)
     client_result = verify_client_commitment(commitments_dir, chain_path, best_match_idx)
@@ -214,4 +215,11 @@ def generate_evidence_report(
         "client_commitment_reason": client_result.get("reason"),
         "anchor_reason": anchor_result.get("reason"),
     }
+    if fingerprint_analysis is not None:
+        report["fingerprint_analysis"] = fingerprint_analysis
+        report["possible_collusion"] = bool(
+            fingerprint_analysis.get("possible_collusion", False)
+        )
+        report["attribution_status"] = fingerprint_analysis.get("attribution_status")
+        report["collusion_reason"] = fingerprint_analysis.get("collusion_reason")
     return report

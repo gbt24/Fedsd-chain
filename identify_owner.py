@@ -379,6 +379,7 @@ def main():
             threshold=args.threshold,
             run_id=getattr(train_args, "run_id", None),
             anchor_client=anchor_client,
+            fingerprint_analysis=fingerprint_analysis,
         )
 
         with open(evidence_output, "w") as f:
