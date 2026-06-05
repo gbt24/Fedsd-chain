@@ -2,11 +2,15 @@
 set -euo pipefail
 
 GPU="${GPU:-0}"
+PYTHON_BIN="${PYTHON_BIN:-python}"
 DRY_RUN="${DRY_RUN:-1}"
 ROOT="./result/journal_multiseed"
+FORCE="${FORCE:-0}"
 PRE_TRAIN_SIMPLE="${PRE_TRAIN_SIMPLE:-True}"
 SD_MODEL="${SD_MODEL:-google/ddpm-cifar10-32}"
-SEEDS=(1 2 3)
+ENABLE_BLOCKCHAIN="${ENABLE_BLOCKCHAIN:-True}"
+SEEDS_TEXT="${SEEDS:-1 2 3}"
+read -r -a SEEDS <<< "$SEEDS_TEXT"
 
 run_cmd() {
   if [ "$DRY_RUN" = "1" ]; then
@@ -21,7 +25,10 @@ for seed in "${SEEDS[@]}"; do
   stage1="$ROOT/celeba64/plain/seed$seed"
   full="$ROOT/celeba64/full_iid/seed$seed"
 
-  run_cmd python main_diffusion.py \
+  if [ "$FORCE" != "1" ] && [ -f "$stage1/model_final.pth" ]; then
+    echo "Skip existing CelebA Stage 1: $stage1"
+  else
+    run_cmd "$PYTHON_BIN" main_diffusion.py \
     --model SimpleUNet \
     --dataset celeba64 \
     --num_classes 1 \
@@ -59,8 +66,12 @@ for seed in "${SEEDS[@]}"; do
     --seed "$seed" \
     --save True \
     --save_dir "$stage1"
+  fi
 
-  run_cmd python main_diffusion.py \
+  if [ "$FORCE" != "1" ] && [ -f "$full/model_final.pth" ]; then
+    echo "Skip existing CelebA Stage 2: $full"
+  else
+    run_cmd "$PYTHON_BIN" main_diffusion.py \
     --model SimpleUNet \
     --dataset celeba64 \
     --num_classes 1 \
@@ -105,11 +116,12 @@ for seed in "${SEEDS[@]}"; do
     --lambda2 0.01 \
     --test_interval 5 \
     --test_bs 16 \
-    --enable_blockchain True \
+    --enable_blockchain "$ENABLE_BLOCKCHAIN" \
     --enable_anchor False \
     --anchor_mode mock \
     --gpu "$GPU" \
     --seed "$seed" \
     --save True \
     --save_dir "$full"
+  fi
 done
